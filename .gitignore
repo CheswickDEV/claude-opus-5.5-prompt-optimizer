@@ -1,0 +1,14 @@
+# Local research material — not part of the published repo
+docs/
+
+# Local Claude Code settings
+.claude/
+
+# Local work plan for the next session
+task.md
+
+# Python bytecode
+__pycache__/
+
+# Local list of GitHub topics (set via gh repo edit, not committed)
+topics.md
