@@ -75,7 +75,7 @@ act on.
 
 An unattended API agent example with a full `<parameters>` block lives in example 2: it removes three settings that return HTTP 400 on Opus 5.5 (`thinking: disabled`, forced `tool_choice`, `temperature`), a JSON `reasoning` field, and a double-check subagent.
 
-**Measured, not just argued:** on 10 held-out prompts that were never used to tune the rules, Claude Opus 5.5 gave the better result in 92% of decided blind comparisons once the optimizer's questions were answered (62% for the first-round prompt alone), and every machine check passed in 27 of 30 runs instead of 22 — see the [evaluation](#-evaluation), including what the numbers do not show.
+**Measured, not just argued:** on held-out prompts that were never used to tune the rules, Claude Opus 5.5 gave the better result in 85% of decided blind comparisons once the optimizer's questions were answered (20 prompts) and in 63% for the first-round prompt alone (40 prompts) — see the [evaluation](#-evaluation), including where it does worse and what the numbers do not show.
 
 ---
 
@@ -204,30 +204,33 @@ flowchart LR
 
 **Does the optimized prompt make Opus 5.5 produce better results?** Measured in October 2026 on `claude-opus-5-5`, quality first, tokens second.
 
-**Setup.** Realistic prompts written by agents that could not see the optimizer's rules: short tasks, knowledge work (including 96k–126k-character documents), interactive and unattended coding in a small Python repository with hidden acceptance tests, pasted text with planted instructions, and a cyber-adjacent log triage. Each prompt ran 3× as you wrote it (default `effort: medium`) and 3× as optimized (with the recommended `effort`). Claude Fable 5.1 judged every pair blind, twice with swapped positions, against a hidden profile of what the user really wanted; machine checks covered valid JSON, planted facts, injected text, protected files and hidden unit tests. A simulated user then answered the optimizer's questions, and the round-2 prompt ran the same way.
+**Setup.** Realistic prompts written by agents that could not see the optimizer's rules: short tasks, knowledge work (including 53k–126k-character documents), interactive and unattended coding in a small Python repository with hidden acceptance tests, pasted text with planted instructions, and security-adjacent triage. Each prompt ran 3× as you wrote it (default `effort: medium`) and 3× as optimized (with the recommended `effort`). Claude Fable 5.1 judged every pair blind, twice with swapped positions, against a hidden profile of what the user really wanted; machine checks covered valid JSON, planted facts, injected text, protected files and hidden unit tests. A simulated user then answered the optimizer's questions, and the round-2 prompt ran the same way.
 
-There are two sets: **18 development prompts**, on which the rules were fixed, and **10 held-out prompts**, frozen before the first run and never used to change a rule. The held-out numbers are the ones to go by:
+The rules were fixed on **18 development prompts**. Three **held-out sets** (10 + 10 + 20 prompts) were each frozen by sha256 before the first run and never used to change the rules they measured; the gates for each were written down before the runs. The held-out numbers for the rules this repository ships are the ones to go by:
 
-| Held-out: 10 new prompts, 30 pairs per column | Optimized prompt vs. yours | After answering the questions vs. round 1 | After answering vs. yours |
-|---|---|---|---|
-| Judge prefers the optimized prompt | **62%** of decided pairs (16 : 10, 4 ties) — not significant | **83%** (19 : 4, 7 ties) | **92%** (24 : 2, 4 ties) |
-| Runs with every machine check passed | **27 / 30** (yours: 22 / 30) | 27 / 30 | 27 / 30 |
-| Hidden coding tests passed | 9 / 9 (yours: 9 / 9) | 9 / 9 | 9 / 9 |
-| First result already acceptable to the (simulated) user | 90% (yours: 80%) | 100% | 100% |
-| Tokens per acceptable result, incl. up to 3 corrections | +18% (API-equivalent +9%) | | +72% (API-equivalent +34%) |
+| Shipped rules on held-out prompts | Set 1 (10 prompts) | Set 2 (10 prompts) | Set 3 (20 prompts) | All 40 |
+|---|---|---|---|---|
+| Judge prefers the optimized prompt (round 1) over yours | 62% (16 : 10, 4 ties) | 71% (17 : 7, 6 ties) | 60% (35 : 23, 2 ties) | **63%** (68 : 40, p = 0.009) |
+| … after answering the questions (round 2) | 92% (24 : 2, 4 ties) | 77% (17 : 5, 8 ties) | not measured | **85%** (41 : 7) |
+| Runs with every machine check passed, round 1 (yours) | 27 / 30 (22 / 30) | 30 / 30 (29 / 30) | 48 / 60 (44 / 60) | 105 / 120 (95 / 120) |
+| Hidden coding tests passed, round 1 (yours) | 9 / 9 (9 / 9) | 9 / 15 (10 / 15) | 19 / 27 (22 / 27) | 37 / 51 (41 / 51) |
+| … after answering the questions | 9 / 9 | 15 / 15 | – | 24 / 24 |
+| Tokens, round 1 vs. yours | +18% per acceptable result (incl. up to 3 corrections) | +66% per acceptable result | +75% per call (coding chains not run) | |
 
-On the 18 development prompts (in-sample, after the fixes): optimized vs. yours 72% (33 : 13, 8 ties), round 2 vs. round 1 82%, round 2 vs. yours 75%; every check passed in 49 / 54 runs (yours: 36 / 54); API-equivalent cost per acceptable result −6% for round 1 and +8% for round 2.
+On the 18 development prompts (in-sample, after the fixes): optimized vs. yours 72% (33 : 13, 8 ties), round 2 vs. yours 75%.
 
 **What this means.**
-- **Answer the questions.** With the answers, the optimized prompt beat yours in 92% of held-out comparisons, and every first result was acceptable. Round 1 alone is a small gain on new prompts (95% CI 42–78%): better on short tasks, knowledge work and the unattended run, worse on interactive coding.
-- **It costs tokens; it does not save them.** The optimized prompts make the model do more: more output on knowledge work, more tests and longer reports in coding runs. The one-time optimizer run (≈ $1.1 API-equivalent for round 1, ≈ $1.4 with round 2) is repaid only in a few cases: short prompts run ≈ 50+ times, and on the held-out set round 1 for interactive coding after ≈ 24 runs. Use it for better results, not to save quota.
+- **Answer the questions.** With the answers, the optimized prompt beat yours in 85% of held-out comparisons and passed every hidden coding test (24 / 24). Only the answers can bring in facts you never wrote down, such as which business rule a fix must follow.
+- **Round 1 alone is a modest gain:** 63% over 40 new prompts. It was better on short tasks and unattended runs in every set, mixed on knowledge work and on prompts with planted instructions, and **worse on interactive coding** in Claude Code: round 1 lost that route in all three sets and passed fewer hidden tests than your prompt in sets 2 and 3.
+- **It costs tokens; it does not save them.** The optimized prompts make the model do more: more output on knowledge work, more tests and longer reports in coding runs. Use it for better results, not to save quota.
+
+**A revised rule version was measured and is not shipped.** It targeted the interactive-coding weakness and, on set 3, beat your prompt in 69% of comparisons in round 1 (p = 0.008; 75% after the answers) and won interactive coding 12 : 5. Its pre-registered gate also required that no route get worse on the machine checks, and on interactive coding one hidden-test run more failed (12 / 18 vs. 13 / 18 for your prompt), so the shipped rules stay as they are.
 
 **What these numbers do not show.**
-- **Small samples.** 10 held-out prompts × 3 runs, with one unattended-coding and one injection prompt. Round 1's 62% sits on the 60% gate set before the test, and it crossed that line only after a harness fix that made committed code visible to the judge.
-- **Weak spot: interactive coding.** All hidden tests passed in every variant; the verdicts turned on scope. Round 1 narrowed one task to a single prescribed regression test, and the answered round 2 added an unrequested command in another.
-- **History.** The first version of the optimizer *lost* on the development prompts (32% win rate): it added sections, citation duties and invented placeholders nobody asked for. The rules marked **[MEASURED]** in [`02`](knowledge/02-prompting-rules.md) were fixed on those prompts, so the in-sample 72% shows the fixes work; the held-out set shows what carries over.
-- One judge model, and the simulated user is the same model.
+- **Samples are small:** 40 held-out prompts × 3 runs; per-route results rest on 1–6 prompts per set.
+- **One judge model,** and the simulated user is the same model.
 - Runs used Claude Code (`claude -p`), which applies only `effort` from the parameter block — structured outputs, `max_tokens`, `display` and `fallbacks` were not part of the measurement. API parameters were checked against Anthropic's documentation, not live (no API key).
+- **History.** The first version of the optimizer *lost* on the development prompts (32% win rate): it added sections, citation duties and invented placeholders nobody asked for. The rules marked **[MEASURED]** in [`02`](knowledge/02-prompting-rules.md) were fixed on those prompts, so the in-sample 72% shows the fixes work; the held-out sets show what carries over.
 
 Ablations of four rules carried over from Opus 5 (concise-answer snippet, verification lines, subagent cap, effort levels) are summarized in the rule texts as **[MEASURED: T5 ablation]**.
 
