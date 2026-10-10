@@ -141,20 +141,15 @@ Start a conversation and type `prompt: <your raw prompt>`.
 
 Invoke it with `/prompt-opus55 <your raw prompt>` — the skill argument is the raw prompt (the `prompt:` prefix mentioned in the knowledge files applies to the Project version only).
 
-### Option B2: Claude Code skill from the `hybrid` branch (interactive coding)
+### Option B2: terminal output format (`hybrid` branch)
 
-The `hybrid` branch is the same optimizer with one change for **interactive coding in Claude Code** (Route L): the optimized prompt contains no "ask me before", "wait for my OK" or "propose … first" steps that stop the agent. Actions beyond your request (push, PR, deploy, production data) are written as exclusions instead ("not part of this task; if it would be needed, say so in your final report"), and what would have been a stop becomes a question from the optimizer: open design decisions, who or what reads the outputs the change touches, whether a path is the repository or a deployment. The rest the agent decides and names in its final report. Every other route (knowledge work, short tasks, API prompts, unattended CI runs) uses the rules on `main`. The optimizer detects interactive coding itself, so there is one command for everything.
-
-**Use it on the premise that you answer every question** and use the final prompt from round 2 (see Before & After). The Route L change is not measured on held-out data ([evaluation](#-evaluation)); `main` remains the measured version.
+The `hybrid` branch has the rules of `main` (plus R22 before R46: an independent check you explicitly require stays in the prompt) and a different output for Claude Code: Markdown sections instead of XML blocks, a `/copy` line, a Claude Code target (model and `/effort`), and questions asked last as a dialog with options and a recommended answer. On held-out set 4 it was weaker than `main` on unattended CI runs (see [evaluation](#-evaluation)), so it is not merged; `main` is the measured version.
 
 ```bash
-git clone https://github.com/CheswickDEV/claude-opus-5.5-prompt-optimizer.git
-cd claude-opus-5.5-prompt-optimizer
-git checkout hybrid
-./tools/sync_skill.sh        # installs ~/.claude/skills/prompt-opus55 (needs bash and python3)
+git checkout hybrid && ./tools/sync_skill.sh     # back to main: git checkout main && ./tools/sync_skill.sh
 ```
 
-Invoke it with `/prompt-opus55 <your raw prompt>`, as in option B. Update later with `git checkout hybrid && git pull && ./tools/sync_skill.sh`; go back to the measured rules with `git checkout main && ./tools/sync_skill.sh`. Both install under the same name, so the last sync wins.
+Both install under the same name (`/prompt-opus55`), so the last sync wins.
 
 ### Option C: Claude API
 
@@ -266,28 +261,30 @@ flowchart LR
 
 **Setup.** Realistic prompts written by agents that could not see the optimizer's rules: short tasks, knowledge work (including 53k–126k-character documents), interactive and unattended coding in a small Python repository with hidden acceptance tests, pasted text with planted instructions, and security-adjacent triage. Each prompt ran 3× as you wrote it (default `effort: medium`) and 3× as optimized (with the recommended `effort`). Claude Fable 5.1 judged every pair blind, twice with swapped positions, against a hidden profile of what the user really wanted; machine checks covered valid JSON, planted facts, injected text, protected files and hidden unit tests. A simulated user then answered the optimizer's questions, and the final prompt from round 2 (see Before & After) ran the same way.
 
-The rules were fixed on **18 development prompts**. Three **held-out sets** (10 + 10 + 20 prompts) were each frozen by sha256 before the first run and never used to change the rules they measured; the gates for each were written down before the runs. The held-out numbers for the rules this repository ships are the ones to go by:
+The rules were fixed on **18 development prompts**. Four **held-out sets** (10 + 10 + 20 + 22 prompts) were each frozen by sha256 before the first run and never used to change the rules they measured; the gates for each were written down before the runs. The held-out numbers for the rules this repository ships are the ones to go by:
 
 | Shipped rules on held-out prompts | Set 1 (10 prompts) | Set 2 (10 prompts) | Set 3 (20 prompts) | All 40 |
 |---|---|---|---|---|
 | Judge prefers the optimized prompt (round 1) over yours | 62% (16 : 10, 4 ties) | 71% (17 : 7, 6 ties) | 60% (35 : 23, 2 ties) | **63%** (68 : 40, p = 0.009) |
-| … after answering the questions (round 2) | 92% (24 : 2, 4 ties) | 77% (17 : 5, 8 ties) | not measured | **85%** (41 : 7) |
+| … after answering the questions (round 2) | 92% (24 : 2, 4 ties) | 77% (17 : 5, 8 ties) | 76% (42 : 13, 5 ties) | **81%** (83 : 20, p < 0.001) |
 | Runs with every machine check passed, round 1 (yours) | 27 / 30 (22 / 30) | 30 / 30 (29 / 30) | 48 / 60 (44 / 60) | 105 / 120 (95 / 120) |
 | Hidden coding tests passed, round 1 (yours) | 9 / 9 (9 / 9) | 9 / 15 (10 / 15) | 19 / 27 (22 / 27) | 37 / 51 (41 / 51) |
-| … after answering the questions | 9 / 9 | 15 / 15 | – | 24 / 24 |
+| … after answering the questions | 9 / 9 | 15 / 15 | 21 / 27 | 45 / 51 |
 | Tokens, round 1 vs. yours | +18% per acceptable result (incl. up to 3 corrections) | +66% per acceptable result | +75% per call (coding chains not run) | |
 
 On the 18 development prompts (in-sample, after the fixes): optimized vs. yours 72% (33 : 13, 8 ties), round 2 vs. yours 75%.
 
 **What this means.**
-- **Answer the questions.** With the answers, the optimized prompt beat yours in 85% of held-out comparisons and passed every hidden coding test (24 / 24). Only the answers can bring in facts you never wrote down, such as which business rule a fix must follow.
+- **Answer the questions.** With the answers, the optimized prompt beat yours in 81% of held-out comparisons and passed 45 / 51 hidden coding tests (yours 41 / 51). Only the answers can bring in facts you never wrote down, such as which business rule a fix must follow.
 - **Round 1 alone is a modest gain:** 63% over 40 new prompts. It was better on short tasks and unattended runs in every set, mixed on knowledge work and on prompts with planted instructions, and **worse on interactive coding** in Claude Code: round 1 lost that route in all three sets and passed fewer hidden tests than your prompt in sets 2 and 3.
 - **It costs tokens; it does not save them.** The optimized prompts make the model do more: more output on knowledge work, more tests and longer reports in coding runs. Use it for better results, not to save quota.
 
 **A revised rule version was measured and is not shipped.** It targeted the interactive-coding weakness and, on set 3, beat your prompt in 69% of comparisons in round 1 (p = 0.008; 75% after the answers) and won interactive coding 12 : 5. Its pre-registered gate also required that no route get worse on the machine checks, and on interactive coding one hidden-test run more failed (12 / 18 vs. 13 / 18 for your prompt), so the shipped rules stay as they are.
 
+**Interactive coding got its own rules (Route L, October 20, 2026).** On set 3, interactive coding was the weak spot after the answers: one round-2 prompt turned an answer into a wait step, and all three runs stopped (hidden tests 12 / 18 vs. 13 / 18 for your prompt). The Route L rules in [`03`](knowledge/03-workflow-and-routing.md) remove such steps: the developer's request stays the core, nothing is narrowed, actions beyond the request become exclusions, and what would have been a stop becomes a question for you. On set 4 (22 new prompts, 9 of them interactive coding; the user answers every question), these rules after the answers beat your prompt on interactive coding 21 : 5 (1 tie, p = 0.002) and the previous rules 13 : 8 (6 ties), with 27 / 27 hidden-test runs passed (previous rules 24 / 27, yours 22 / 27). Over all 22 prompts they beat yours 80% (47 : 12, 7 ties). That run used the `hybrid` output format, which lost two unattended CI runs to a missed detail (hidden tests 7 / 9 vs. 9 / 9), so `main` takes only the Route L rules and keeps its output format. That combination was not measured separately.
+
 **What these numbers do not show.**
-- **Samples are small:** 40 held-out prompts × 3 runs; per-route results rest on 1–6 prompts per set.
+- **Samples are small:** 62 held-out prompts × 3 runs; per-route results rest on 1–9 prompts per set.
 - **One judge model,** and the simulated user is the same model.
 - Runs used Claude Code (`claude -p`), which applies only `effort` from the parameter block — structured outputs, `max_tokens`, `display` and `fallbacks` were not part of the measurement. API parameters were checked against Anthropic's documentation, not live (no API key).
 - **History.** The first version of the optimizer *lost* on the development prompts (32% win rate): it added sections, citation duties and invented placeholders nobody asked for. The rules marked **[MEASURED]** in [`02`](knowledge/02-prompting-rules.md) were fixed on those prompts, so the in-sample 72% shows the fixes work; the held-out sets show what carries over.

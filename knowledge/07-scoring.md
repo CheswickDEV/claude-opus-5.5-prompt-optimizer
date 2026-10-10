@@ -52,15 +52,16 @@ Each dimension starts at its maximum; deduct per finding from Phase 1 (P1.3 anti
 **C — Verbosity, communication & format (15)**
 - No length steering for a user-facing product or for model-written deliverables (R15/R16): −4
 - Frontend task with no concrete design direction (R20): −4
-- Agentic session with a human reader but no communication cadence (R17): −3
+- Agentic session with a human reader but no communication cadence (R17): −3 (Route L: only when the user asks for more frequent or predictable updates or reports silent or over-narrated runs)
 - Negative-only format steering ("no markdown", "don't use lists") (R19): −3
 - Correction narration unaddressed in a user-facing product where it matters (R18): −1
 
 **D — Agentics & harness behavior (20) — routes L/XL only; award in full on S/M (exception: R32 applies to any code-review task)**
 - No boundaries on state-changing access, or on tools that act outside the session (R24): −5
+- Route L: a confirmation or wait step on the requested work ("ask me before", "wait for my OK", "propose … first") (R24): −3
 - Unattended deployment without checklist, end-of-turn handling, or standing instruction (R25): −4 (a missing completion condition is scored once, under R1)
-- Blanket authorization / no confirmation step for risky actions under act-don't-ask framing (R26): −3
-- No scope guidance where scope creep is plausible (R21): −3
+- Blanket authorization / no confirmation step for risky actions under act-don't-ask framing (R26): −3 (Route L: exclusions of the risky actions satisfy this)
+- No scope guidance where scope creep is plausible (R21): −3 (Route L: only when the input invites expansion or the user reports scope creep)
 - Delegation push or subagent-centered harness without a delegation cap (R23): −3
 - Status-reporting agent (unattended run whose report is read later) without claim grounding (R29): −3
 - Code-review severity filter ("only report high-severity") (R32): −3

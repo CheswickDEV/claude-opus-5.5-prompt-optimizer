@@ -61,7 +61,7 @@ Match the length of written documents to what the task needs: cover the substanc
 
 ## 4. Narration cadence — R17 · [PromptO5] verbatim
 
-**When:** agentic sessions where a human reads the updates (human-in-the-loop, pair programming). Routes L/XL. Written for Opus 5 to tune narration down; the lever ("say so in the system prompt") is documented for Opus 5.5 → `(re-test)`.
+**When:** agentic sessions where a human reads the updates (human-in-the-loop, pair programming). Routes L/XL (Route L: only when the user asks for more frequent or predictable updates or reports silent or over-narrated runs — R17). Written for Opus 5 to tune narration down; the lever ("say so in the system prompt") is documented for Opus 5.5 → `(re-test)`.
 
 ```text
 Before your first tool call, say in one sentence what you're about to do. While working, give a brief update only when you find something important or change direction. When you finish, lead with the outcome: your first sentence should answer "what happened" or "what did you find," with supporting detail after it for readers who want it.
@@ -77,7 +77,7 @@ Only correct an earlier statement when the error would change the user's code, c
 
 ## 6. Scope discipline — R21 · [PromptO5] verbatim
 
-**When:** narrow tasks, or the input shows scope-creep risk ("also clean up…", open-ended "improve"). Routes M/L/XL.
+**When:** narrow tasks, or the input shows scope-creep risk ("also clean up…", open-ended "improve"). Routes M/L/XL (Route L: only where the input invites expansion or the user reports scope creep — R21).
 
 ```text
 Deliver what was asked, at the scope intended. Make routine judgment calls yourself, and check in only when different readings of the request would lead to materially different work. If the request seems mistaken or a better approach exists, say so in a sentence and continue with the task as asked rather than quietly narrowing, widening, or transforming it. Finish the whole task, and stop short of actions that are clearly beyond what was asked.
@@ -184,7 +184,7 @@ that require multistep reasoning. When in doubt, respond directly.
 
 ## 17. Reversibility boundaries — R24 · [BestPract] verbatim
 
-**When:** the prompt grants access to state that could be changed irreversibly or visibly to others (repos, shared infrastructure, messaging). Routes L/XL. Always when a tool acts outside the session (posts, sends, approves, merges, deploys), also unattended: name the outside-effect actions the task pre-approves; every other one keeps "ask the user before proceeding" in interactive use and, in an unattended run, becomes "don't take it; say in your report what is needed and why" (R24/R26). This adaptation is [DERIVED], not the verbatim text. Introduced in [BestPract] for Opus 4.6 → transfer; on Opus 5.5 (least overeager model tested) trim the example list to what the deployment can actually touch.
+**When:** the prompt grants access to state that could be changed irreversibly or visibly to others (repos, shared infrastructure, messaging). Routes L/XL. Always when a tool acts outside the session (posts, sends, approves, merges, deploys), also unattended: name the outside-effect actions the task pre-approves; every other one keeps "ask the user before proceeding" in interactive use and, in an unattended run, becomes "don't take it; say in your report what is needed and why" (R24/R26). This adaptation is [DERIVED], not the verbatim text. Introduced in [BestPract] for Opus 4.6 → transfer; on Opus 5.5 (least overeager model tested) trim the example list to what the deployment can actually touch. **Route L:** do not use the confirmation text below; write the exclusion form instead — `Pushing, opening a PR, deploying and changing production data are not part of this task. Don't do them; if one of them would be needed, say so in your final report.` — naming only what the deployment can touch; actions the request names stay allowed [DERIVED, not measured].
 
 ```text
 Consider the reversibility and potential impact of your actions. You are encouraged to
