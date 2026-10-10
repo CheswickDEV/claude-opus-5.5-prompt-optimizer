@@ -96,6 +96,21 @@ Start a conversation and type `prompt: <your raw prompt>`.
 
 Invoke it with `/prompt-opus55 <your raw prompt>` — the skill argument is the raw prompt (the `prompt:` prefix mentioned in the knowledge files applies to the Project version only).
 
+### Option B2: Claude Code skill from the `hybrid` branch (interactive coding)
+
+The `hybrid` branch is the same optimizer with one change for **interactive coding in Claude Code** (Route L): the optimized prompt contains no "ask me before", "wait for my OK" or "propose … first" steps that stop the agent. Actions beyond your request (push, PR, deploy, production data) are written as exclusions instead ("not part of this task; if it would be needed, say so in your final report"), and what would have been a stop becomes a question from the optimizer: open design decisions, who or what reads the outputs the change touches, whether a path is the repository or a deployment. The rest the agent decides and names in its final report. Every other route (knowledge work, short tasks, API prompts, unattended CI runs) uses the rules on `main`. The optimizer detects interactive coding itself, so there is one command for everything.
+
+**Use it on the premise that you answer every question** and run the round-2 prompt. The Route L change is not measured on held-out data ([evaluation](#-evaluation)); `main` remains the measured version.
+
+```bash
+git clone https://github.com/CheswickDEV/claude-opus-5.5-prompt-optimizer.git
+cd claude-opus-5.5-prompt-optimizer
+git checkout hybrid
+./tools/sync_skill.sh        # installs ~/.claude/skills/prompt-opus55 (needs bash and python3)
+```
+
+Invoke it with `/prompt-opus55 <your raw prompt>`, as in option B. Update later with `git checkout hybrid && git pull && ./tools/sync_skill.sh`; go back to the measured rules with `git checkout main && ./tools/sync_skill.sh`. Both install under the same name, so the last sync wins.
+
 ### Option C: Claude API
 
 ```python
