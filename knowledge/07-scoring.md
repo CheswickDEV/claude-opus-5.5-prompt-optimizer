@@ -67,7 +67,7 @@ Each dimension starts at its maximum; deduct per finding from Phase 1 (P1.3 anti
 - Long-horizon state, compaction, or time signals unaddressed for XL (R30/R31): −2
 
 **E — Parameters & refusal handling (15) — API target only; award in full on chat target**
-- Sets forbidden request settings: sampling, prefill, `thinking: disabled`/`budget_tokens`, forced `tool_choice`, `computer_20251124` on Claude API/Google Cloud (R10/R35/R36/R37/R44): −6
+- Sets forbidden request settings: sampling, prefill, `thinking: disabled`/`budget_tokens`, forced `tool_choice`, `computer_20251124`/`computer_20250124` on Claude API/Google Cloud (R10/R35/R36/R37/R44): −6
 - No explicit effort (silently `medium`), or an effort clearly below what the task's quality needs (R33/R45): −4
 - No refusal/fallback handling despite a cyber/bio/frontier-LLM-adjacent domain (R39): −4
 - History-editing harness design: system prompt rebuilt mid-session, tools added later, reminders inserted and deleted (R42): −3

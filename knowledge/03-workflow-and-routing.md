@@ -22,7 +22,7 @@ Decide where the optimized prompt will run, because it controls whether the `<pa
   - Reasoning reproduction in the output: "explain your reasoning step by step", "show your thinking", `<thinking>`/`<reasoning>`/scratchpad sections, a `reasoning`/`thinking`/`trace` field in a JSON schema or tool input, "private notes", reasoning "in full" → R9
   - Thinking configuration: `thinking: disabled`, `budget_tokens`, "don't think / don't reason" rules, the thinking-off tool-preamble mitigation → R10/R13
   - Manual CoT ("think step by step", hand-written reasoning plans) anywhere; "think carefully before answering" lines in chat prompts → R12/R48
-  - Forbidden request settings: `temperature`/`top_p`/`top_k`, assistant prefill, `tool_choice` `any`/`tool`, `computer_20251124` on Claude API/Google Cloud → R35/R36/R37/R44
+  - Forbidden request settings: `temperature`/`top_p`/`top_k`, assistant prefill, `tool_choice` `any`/`tool`, `computer_20251124`/`computer_20250124` on Claude API/Google Cloud → R35/R36/R37/R44
   - Effort assumptions: no effort set (silently `medium`), or an effort clearly below what the task's quality needs → R33/R45
   - Verifier subagents ("use a subagent to verify", "have a separate subagent double-check") → R46/R22. The user's own verification lines ("double-check", "final verification step") are kept, tightened to concrete criteria where the task has them (R22, measured)
   - Delegation pushes ("use subagents frequently", "delegate whenever possible") or harnesses built around subagents without a cap → R23/R46
@@ -52,7 +52,7 @@ Additional checks:
 
 - **Agents with tools that act outside the session** (post, send, approve, merge, deploy) are Route L or XL whatever the task size, so boundaries and the matching cadence apply (R24).
 - **Less thinking only on request** (R11): if the input explicitly wants faster replies or less thinking, the parameter recommendation lowers `effort` first and the prompt keeps at most the documented one-liner. The optimizer never lowers effort on its own to save tokens.
-- **Is Opus 5.5 the right model?** Where Opus 5.5 at `high`/`xhigh` may still fall short of the needed quality, Anthropic points to Claude Fable 5.1 ([Models]) — mention it. Lighter models (Claude Sonnet 5.5, Claude Haiku 4.5) are mentioned only when the user states that cost or latency outweighs quality. The optimizer states this as a hint in `<open_questions>`; it does not decide.
+- **Is Opus 5.5 the right model?** Where Opus 5.5 at `high`/`xhigh` may still fall short of the needed quality, Anthropic points to Claude Fable 5.1 ([Models]) — mention it. Lighter models (Claude Sonnet 5.5, Claude Haiku 5.5) are mentioned only when the user states that cost or latency outweighs quality. The optimizer states this as a hint in `<open_questions>`; it does not decide.
 
 ## Phase 3 — Rule application (transformation)
 
@@ -69,7 +69,7 @@ Order of operations:
 Checklist — every item must pass:
 
 - [ ] No instruction or schema field that asks for reasoning in the output; a short explanation or evidence summary is fine (R9)
-- [ ] No `temperature`/`top_p`/`top_k`, prefill, `thinking: disabled`, `budget_tokens`, forced `tool_choice`, or `computer_20251124` (Claude API/Google Cloud) in the recommendation (R10/R35/R36/R37/R44)
+- [ ] No `temperature`/`top_p`/`top_k`, prefill, `thinking: disabled`, `budget_tokens`, forced `tool_choice`, or `computer_20251124`/`computer_20250124` (Claude API/Google Cloud) in the recommendation (R10/R35/R36/R37/R44)
 - [ ] No "don't think" rule and no manual CoT left; chat prompts carry no "think carefully" line (R12/R13)
 - [ ] Verifier subagents and "delegate more" pushes removed (R46); the user's own verification lines kept, no new blanket verification added (R22)
 - [ ] No CRITICAL/MUST vocabulary, anti-laziness appeals, forced status cadence, or hand-made countdowns (R28/R49/R50/R51)

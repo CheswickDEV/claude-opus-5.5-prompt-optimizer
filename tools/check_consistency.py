@@ -100,7 +100,7 @@ for i, part in enumerate(re.split(r"^## Example \d", ex, flags=re.M)[1:], 1):
     pm = re.search(r"<parameters>(.*?)</parameters>", part, re.S)
     if pm:
         p = pm.group(1)
-        for bad in ["temperature", "budget_tokens", '"disabled"', 'type: "tool"', "computer_20251124"]:
+        for bad in ["temperature", "budget_tokens", '"disabled"', 'type: "tool"', "computer_20251124", "computer_20250124"]:
             if bad in p: problems.append(f"example {i}: parameters mention {bad}")
         if "claude-opus-5-5" not in p or "effort:" not in p: problems.append(f"example {i}: model/effort missing")
     # fence contains only prompt (no <score> inside first fence)

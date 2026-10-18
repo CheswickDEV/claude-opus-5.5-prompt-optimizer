@@ -188,10 +188,10 @@ else:
 
 **Opus 5.5 API notes:**
 
-* `effort` defaults to **`medium`** (every other model with effort: `high`) — set it explicitly; for the best coding/agentic results use `high`, `xhigh` for the hardest work
+* `effort` defaults to **`medium`** (most other models with effort: `high`; Haiku 5.5 also `medium`) — set it explicitly; for the best coding/agentic results use `high`, `xhigh` for the hardest work
 * Thinking is always on: `thinking: {"type": "disabled"}` and `budget_tokens` return 400; responses may start with `thinking` blocks — read blocks by `type`
 * `max_tokens` covers thinking **plus** reply; long agentic coding turns: 128k with streaming
-* `tool_choice` `any`/`tool` → 400 — use `auto`, say in the prompt when the tool applies, add `strict: true`
+* `tool_choice` `any`/`tool` → 400 — use `auto`, say in the prompt when the tool applies, add `strict: true` (not on Amazon Bedrock: validate the tool input in code)
 * No `temperature`/`top_p`/`top_k`, no assistant prefill
 * Text between tool calls arrives as `thinking` blocks — send `thinking: {"type": "adaptive", "display": "updates"}` (beta `thinking-display-updates-2026-08-18`) if a UI shows progress
 * Keep history append-only (preserved thinking): change instructions with mid-conversation system messages
@@ -363,7 +363,7 @@ The official sources do not answer everything. The optimizer says "not documente
 
 Opus-5.5-measured versions of the Opus 5 snippets (conciseness, scope, delegation, corrections — Anthropic measured them on Opus 5 only; this project re-tested four of them, see [the evaluation](#-evaluation)) · Opus-5.5-specific long-context placement · adapting Fable 5/5.1 prompts · prompt fixes for user-pressure susceptibility · prompt fixes for safeguard false positives · a per-workload effort table · memory-tool specifics · rate-limit numbers. Full list: [`knowledge/01-opus55-model-facts.md`](knowledge/01-opus55-model-facts.md).
 
-The knowledge is **frozen at October 3, 2026**. Several features named here are betas with dated headers; re-verify against the [Opus 5.5 migration guide](https://platform.claude.com/docs/en/models/opus-5-5/migration-guide) before relying on them in production.
+The knowledge is from **October 3, 2026**; every documentation page was re-checked against it on **October 18, 2026** (Haiku 5.5, fast mode without beta header, no structured outputs for Opus 5.5 on Amazon Bedrock, and a few smaller corrections worked in). Several features named here are betas with dated headers; re-verify against the [Opus 5.5 migration guide](https://platform.claude.com/docs/en/models/opus-5-5/migration-guide) before relying on them in production.
 
 ---
 

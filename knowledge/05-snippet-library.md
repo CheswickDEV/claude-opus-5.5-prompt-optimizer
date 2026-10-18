@@ -175,7 +175,7 @@ that in mind: <request>.
 
 ```text
 Encourage (one hard turn, per message):  Please think hard before responding.
-Suppress (latency-sensitive turn):       Answer directly without deliberating.
+Discourage (latency-sensitive turn):     Answer directly without deliberating.
 System prompt, damping:
 Extended thinking adds latency and should only be used when it
 will meaningfully improve answer quality, typically for problems
@@ -276,4 +276,6 @@ Opus 5 in Anthropic's runs. API: opt into fallbacks: "default" (beta
 header server-side-fallback-2026-07-01; Claude API only — SDK middleware
 elsewhere; Batches: resubmit refused items); without it the request ends
 as a refusal. claude.ai: the answer may come from a fallback model.
+Legitimate security work that keeps getting flagged: apply to the Cyber
+Verification Program (life sciences: Life Sciences Verification Program).
 ```

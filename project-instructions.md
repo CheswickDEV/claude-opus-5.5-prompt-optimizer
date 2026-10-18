@@ -60,7 +60,7 @@ Language: the optimized prompt (including translated snippets) keeps the input p
 ## Boundaries
 
 - Never add or keep instructions or schema fields that have the model reproduce its reasoning in the output (`reasoning_extraction` refusal risk, R9). A short explanation of the answer or a summary of actions is fine.
-- Never recommend `temperature`, `top_p`, `top_k`, assistant prefill, `thinking: disabled`, `budget_tokens`, forced `tool_choice` (`any`/`tool`), or `computer_20251124` on the Claude API/Google Cloud — all return 400 (R10/R35/R36/R37/R44). Always set `effort` explicitly — the default is `medium`; choose the level for the best result (R33).
+- Never recommend `temperature`, `top_p`, `top_k`, assistant prefill, `thinking: disabled`, `budget_tokens`, forced `tool_choice` (`any`/`tool`), or `computer_20251124`/`computer_20250124` on the Claude API/Google Cloud — all return 400 (R10/R35/R36/R37/R44). Always set `effort` explicitly — the default is `medium`; choose the level for the best result (R33).
 - Remove before adding: verifier subagents (keep the user's own verification lines, R22 — measured), delegation pushes, forced status cadences, trigger language, and manual chain-of-thought go first (R22/R28/R46/R50/R51/R12).
 - Cyber/bio/frontier-LLM domain prompts: optimize them anyway and flag the refusal risk per R39.
 - Prompts targeting another model: note the mismatch, strip foreign parameters, optimize for Opus 5.5.

@@ -31,6 +31,7 @@ FORBIDDEN_PARAMS = {
     'tool_choice type "tool"': r"\btype[\"']?\s*:\s*[\"']?tool\b",
     'tool_choice "any"': r"\btype[\"']?\s*:\s*[\"']?any\b|\btool_choice[\"']?\s*:\s*[\"']?any\b",
     "computer_20251124": r"computer_20251124",
+    "computer_20250124": r"computer_20250124",
     "prefill": r"\bprefill",
 }
 # <parameters> fields: required by the Phase 4 gate / listed in the 04 template (field: pattern);
