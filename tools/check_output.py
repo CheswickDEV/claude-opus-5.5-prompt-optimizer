@@ -5,7 +5,9 @@ Parses the reply's first fenced code block (the optimized prompt) and the
 <parameters>, <score>, <changes> and <open_questions> blocks, then checks them
 against the output contract (knowledge/04-output-templates.md), the Phase 4
 quality gate (knowledge/03-workflow-and-routing.md) and the round rules
-(knowledge/07-scoring.md, "Follow-up rounds"). Works for the skill and the
+(knowledge/07-scoring.md, "Follow-up rounds"). A round-1 reply without a fence
+that holds <score> and <open_questions> is checked as a question round (04:
+prompt held back while a question recovers points). Works for the skill and the
 Project variant. Semantic judgment (routing, sensible changes, minimal diff,
 question quality) is left to a human reader.
 
@@ -59,6 +61,8 @@ TRIGGER_MENTION = r"/prompt-opus55|\bprompt:|\bprefix\b|Präfix|\btrigger\b"
 LAST_ROUND = (r"last (?:round of questions|question round|round of question)|final (?:round of questions|question round)|"
               r"letzte (?:Fragerunde|Runde)|no (?:further|more) questions|keine weiteren Fragen")
 ASSUMPTION = r"\((?:assumption|Annahme)\)"
+RELEASE_NOTE = r"(?<![/\w-])[Pp]rompt\b(?![-:])"  # the line names the prompt to come (not /prompt-opus55, not prompt:)
+
 BRACKET_GAP = r"(?<![\w\]])\[([A-Za-zÄÖÜäöü„][^\[\]\n]{1,160})\](?!\()"  # [name], [e.g., …]; not links or arrays
 NONE_MARKER = r"^[-*•]\s*(?:none|no (?:open |further |more )?questions|keine(?: weiteren| offenen)? Fragen)\b"
 
@@ -180,25 +184,34 @@ def check(text, target=None, rnd=1, lang="en", expect_no_blocks=False):
         f.info("reply", "%d chars, %d lines; starts: %s" % (len(text), text.count("\n") + 1, short(text, 90)))
         return f, parsed
 
-    # 1. the optimized prompt: first, alone, followed directly by a block
+    # 1. the optimized prompt: first, alone, followed directly by a block — or, in a
+    #    question round (round 1, a question recovers points), no prompt at all (04)
     fence = parse_fence(text)
-    if not fence:
+    qround = rnd == 1 and not fence and "<score>" in text and "<open_questions>" in text
+    parsed["question_round"] = qround
+    if not fence and not qround:
         f.add("fence_present", False, "no fenced code block")
         return f, parsed
-    body = fence["body"]
+    if qround:
+        body, after = "", text
+        lead = text[:text.index("<score>")].strip()
+        f.add("qround_score_first", not lead, "text before <score>: " + short(lead), level="WARN")
+    else:
+        body, after = fence["body"], None
     parsed["prompt_chars"] = len(body)
-    f.add("fence_first", not fence["leading"].strip(), "text before the fence: " + short(fence["leading"]))
-    f.add("fence_closed", not fence.get("unclosed"), "fence never closed")
-    f.add("fence_info_text", fence["info"] == "text", "info string is %r, template uses 'text'" % fence["info"],
-          level="WARN")
-    inside = [t for t in ("<score>", "<changes>", "<open_questions>", "<parameters>") if t in body]
-    if re.search(r"^\s*total:\s*\d+\s*(?:→\s*\d+\s*)?/100", body, re.M):
-        inside.append("total: …/100")
-    f.add("fence_prompt_only", not inside, "inside the fence: " + ", ".join(inside))
-    after = fence["after"]
-    first = next((l.strip() for l in after.split("\n") if l.strip()), "")
-    f.add("fence_followed_by_block", any(first.startswith("<%s>" % b) for b in BLOCKS),
-          "after the fence comes: " + short(first or "(nothing)"))
+    if not qround:
+      f.add("fence_first", not fence["leading"].strip(), "text before the fence: " + short(fence["leading"]))
+      f.add("fence_closed", not fence.get("unclosed"), "fence never closed")
+      f.add("fence_info_text", fence["info"] == "text", "info string is %r, template uses 'text'" % fence["info"],
+            level="WARN")
+      inside = [t for t in ("<score>", "<changes>", "<open_questions>", "<parameters>") if t in body]
+      if re.search(r"^\s*total:\s*\d+\s*(?:→\s*\d+\s*)?/100", body, re.M):
+          inside.append("total: …/100")
+      f.add("fence_prompt_only", not inside, "inside the fence: " + ", ".join(inside))
+      after = fence["after"]
+      first = next((l.strip() for l in after.split("\n") if l.strip()), "")
+      f.add("fence_followed_by_block", any(first.startswith("<%s>" % b) for b in BLOCKS),
+            "after the fence comes: " + short(first or "(nothing)"))
 
     # 2. blocks outside the fence: presence, order, stray text
     blocks = find_blocks(after)
@@ -215,12 +228,17 @@ def check(text, target=None, rnd=1, lang="en", expect_no_blocks=False):
         f.add("text_between_blocks", not between, "; ".join(short(s, 50) for s in between), level="WARN")
         trailing = after[spans[-1][1]:].strip()
         f.add("no_trailing_text", not trailing, "after the last block: " + short(trailing, 90), level="WARN")
-    for name in ("score", "changes"):
+    for name in (("score",) if qround else ("score", "changes")):
         f.add("block_" + name, name in blocks, "<%s> missing" % name)
+    if qround:
+        shown = [b for b in ("parameters", "changes") if b in blocks]
+        f.add("qround_no_release_blocks", not shown, "question round shows: " + ", ".join(shown))
 
     # 3. <parameters> iff API target
     has_params = "parameters" in blocks
-    if target:
+    if qround:
+        pass
+    elif target:
         f.add("parameters_iff_api", has_params == (target == "api"),
               "%s target but <parameters> %s" % (target, "present" if has_params else "missing"))
     else:
@@ -350,6 +368,14 @@ def check(text, target=None, rnd=1, lang="en", expect_no_blocks=False):
                   "answer line does not say to leave out the trigger (/prompt-opus55 or prompt:)")
         if rnd == 2:
             f.add("last_question_round", re.search(LAST_ROUND, oq, re.I), "round 2 not marked as the last question round")
+        gain = [q for q in qs if re.search(GAIN_TAG, q, re.I)]
+        if qround:
+            f.add("qround_has_gain_question", gain, "question round without a point-recovering question (release instead)")
+            f.add("qround_says_prompt_follows", re.search(RELEASE_NOTE, free_text, re.I),
+                  "answer line does not say the optimized prompt follows", level="WARN")
+        elif rnd == 1:
+            f.add("r1_release_without_gain_question", not gain,
+                  "round 1 releases the prompt although %d question(s) recover points (hold it back, 04)" % len(gain))
     elif rnd <= 2:
         f.add("block_open_questions", False, "<open_questions> missing")
     if rnd >= 3:
@@ -363,6 +389,8 @@ def check(text, target=None, rnd=1, lang="en", expect_no_blocks=False):
             f.info("r3_open_questions_block", "present with %d entr%s; free text: %s" % (
                 len(qs), "y" if len(qs) == 1 else "ies", short(" ".join(entries(blocks["open_questions"][2])[1]), 120)))
 
+    if qround:
+        return f, parsed
     # 7. the prompt text itself
     caps = sorted(set(re.findall(CAPS_TRIGGERS, body)))
     f.add("prompt_no_caps_triggers", not caps, "found: " + ", ".join(caps))

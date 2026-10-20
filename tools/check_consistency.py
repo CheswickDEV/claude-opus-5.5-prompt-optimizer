@@ -91,22 +91,34 @@ def check_score(block, label):
     else: print(f"{label}: {tot} ok")
 ex = files["06-worked-examples.md"]
 for i, part in enumerate(re.split(r"^## Example \d", ex, flags=re.M)[1:], 1):
-    check_score(part, f"example {i}")
-    oq = re.search(r"<open_questions>(.*?)</open_questions>", part, re.S)
-    n = len(re.findall(r"^\s*- ", oq.group(1), re.M)) if oq else 0
-    if n > 3: problems.append(f"example {i}: {n} open questions")
-    if oq and not re.search(r"(normal message|normalen Nachricht)", oq.group(1)): problems.append(f"example {i}: no how-to-answer line")
-    # forbidden settings inside recommended parameters
-    pm = re.search(r"<parameters>(.*?)</parameters>", part, re.S)
-    if pm:
-        p = pm.group(1)
-        for bad in ["temperature", "budget_tokens", '"disabled"', 'type: "tool"', "computer_20251124", "computer_20250124"]:
-            if bad in p: problems.append(f"example {i}: parameters mention {bad}")
-        if "claude-opus-5-5" not in p or "effort:" not in p: problems.append(f"example {i}: model/effort missing")
-    # fence contains only prompt (no <score> inside first fence)
-    fm = re.search(r"\*\*Optimizer output:\*\*\n\n```text\n(.*?)\n```\n<", part, re.S)
-    if not fm: problems.append(f"example {i}: prompt fence not followed directly by a block")
-    elif "<score>" in fm.group(1): problems.append(f"example {i}: score inside fence")
+    outs = re.findall(r"\*\*Optimizer output([^\n]*)\n(.*?)(?=\n\*\*(?:User reply|Commentary|Detection)|\Z)", part, re.S)
+    if not outs: problems.append(f"example {i}: no optimizer output")
+    for k, (head, body) in enumerate(outs, 1):
+        label = f"example {i}.{k}"
+        check_score(body, label)
+        oq = re.search(r"<open_questions>(.*?)</open_questions>", body, re.S)
+        n = len(re.findall(r"^\s*- ", oq.group(1), re.M)) if oq else 0
+        if n > 3: problems.append(f"{label}: {n} open questions")
+        if not oq or not re.search(r"(normal message|normalen Nachricht)", oq.group(1)): problems.append(f"{label}: no how-to-answer line")
+        if "question round" in head:
+            # question round: score and questions only, the draft held back (04)
+            if not re.match(r"\s*```text\n<score>", body): problems.append(f"{label}: question round does not start with <score>")
+            for blk in ["<changes>", "<parameters>", "<system>"]:
+                if blk in body: problems.append(f"{label}: question round shows {blk}")
+            if not re.search(r"\+~\d+ (points?|Punkte?)", oq.group(1) if oq else ""): problems.append(f"{label}: question round without a point-recovering question")
+            if oq and not re.search(r"(follows|frei)", oq.group(1)): problems.append(f"{label}: question round does not say the prompt follows")
+            continue
+        # release: forbidden settings inside recommended parameters
+        pm = re.search(r"<parameters>(.*?)</parameters>", body, re.S)
+        if pm:
+            p = pm.group(1)
+            for bad in ["temperature", "budget_tokens", '"disabled"', 'type: "tool"', "computer_20251124", "computer_20250124"]:
+                if bad in p: problems.append(f"{label}: parameters mention {bad}")
+            if "claude-opus-5-5" not in p or "effort:" not in p: problems.append(f"{label}: model/effort missing")
+        # fence contains only prompt (no <score> inside first fence)
+        fm = re.match(r"\s*```text\n(.*?)\n```\n<", body, re.S)
+        if not fm: problems.append(f"{label}: prompt fence not followed directly by a block")
+        elif "<score>" in fm.group(1): problems.append(f"{label}: score inside fence")
 # 07 worked example table total
 m = re.search(r"\*\*Total\*\* \| \| \*\*−(\d+)\*\* \| \*\*(\d+)/100\*\*", sc)
 print("07 worked example:", m.groups() if m else None)
