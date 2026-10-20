@@ -124,20 +124,15 @@ Start a conversation and type `prompt: <your raw prompt>`.
 
 ### Option B: Claude Code skill
 
-1. Create `~/.claude/skills/prompt-opus55/` and copy [`skill/SKILL.md`](skill/SKILL.md) into it
-2. Copy the seven files from `knowledge/` into `~/.claude/skills/prompt-opus55/references/`
-
-Invoke it with `/prompt-opus55 <your raw prompt>` — the skill argument is the raw prompt (the `prompt:` prefix mentioned in the knowledge files applies to the Project version only).
-
-### Option B2: terminal output format (`hybrid` branch)
-
-The `hybrid` branch has the rules of `main` (plus R22 before R46: an independent check you explicitly require stays in the prompt) and a different output for Claude Code: Markdown sections instead of XML blocks, a `/copy` line, a Claude Code target (model and `/effort`), and questions asked last as a dialog with options and a recommended answer. On held-out set 4 it was weaker than `main` on unattended CI runs (see [evaluation](#-evaluation)), so it is not merged; `main` is the measured version.
-
 ```bash
-git checkout hybrid && ./tools/sync_skill.sh     # back to main: git checkout main && ./tools/sync_skill.sh
+git clone https://github.com/CheswickDEV/claude-opus-5.5-prompt-optimizer.git
+cd claude-opus-5.5-prompt-optimizer
+./tools/sync_skill.sh        # installs ~/.claude/skills/prompt-opus55 (needs bash and python3)
 ```
 
-Both install under the same name (`/prompt-opus55`), so the last sync wins.
+The script copies [`skill/SKILL.md`](skill/SKILL.md) and the seven knowledge files and rewrites the Project's `prompt:` trigger lines to the skill command. Update later with `git pull && ./tools/sync_skill.sh`.
+
+Invoke it with `/prompt-opus55 <your raw prompt>` — the skill argument is the raw prompt. Interactive coding in Claude Code is detected automatically and gets its own rules (no "ask me before" or "wait for my OK" steps; see Evaluation).
 
 ### Option C: Claude API
 
@@ -189,11 +184,12 @@ else:
 | `prompt: <anything>` | The full optimization — everything after the prefix is treated as the raw prompt, verbatim |
 | `What does R22 say?` | **Meta mode** — answers about Opus 5.5, the rules, and their evidence status |
 | `Why high and not the default?` | Meta mode with the documented data (default `medium`; SWE-bench Pro: `high` ≈ +2.5 points over `medium`, `xhigh` ≈ +1.4 over `high`) |
-| *(a normal reply answering the open questions)* | **Answer round** — works your answers into the prompt, re-scores the input with a progression line (`66 → 73/100 (+7 from your answers)`); questions are asked in at most 2 rounds, after that the optimizer decides and marks `(assumption)` |
+| *(a normal reply answering the open questions)* | **Answer round** — releases the optimized prompt with your answers worked in and re-scores the input with a progression line (`66 → 73/100 (+7 from your answers)`); questions are asked in at most 2 rounds, after that the optimizer decides and marks `(assumption)` |
+| `just show me the prompt` *(instead of answering)* | Releases the prompt right away; the optimizer fills the open gaps itself and marks those decisions `(assumption)` |
 | `make it shorter` / `add a German version` | **Follow-up mode** — iterates on the last optimization and re-emits the full output |
 | `give me the API parameters after all` | Switches the last result to the API variant with a full `<parameters>` block |
 
-Output anatomy — the optimized prompt comes **first, as a standalone fenced code block** (system/user split for API targets; chat targets fold system content into the user prompt), followed by `<parameters>` (API only) · `<score>` · `<changes>` (each entry cites rule numbers, Opus-5-derived snippets marked `(re-test)`) · `<open_questions>` (at most 3 per round, asked in at most 2 rounds, closing with how to answer).
+Output anatomy — while a question can still improve the result, round 1 shows only `<score>` and `<open_questions>`; the prompt is built but held back until you answer. The released output puts the optimized prompt **first, as a standalone fenced code block** (system/user split for API targets; chat targets fold system content into the user prompt), followed by `<parameters>` (API only) · `<score>` · `<changes>` (each entry cites rule numbers, Opus-5-derived snippets marked `(re-test)`) · `<open_questions>` (at most 3 per round, asked in at most 2 rounds, closing with how to answer).
 
 Non-English prompts are optimized **in their own language**; only the commentary follows your conversation language.
 
@@ -269,7 +265,7 @@ On the 18 development prompts (in-sample, after the fixes): optimized vs. yours 
 
 **A revised rule version was measured and is not shipped.** It targeted the interactive-coding weakness and, on set 3, beat your prompt in 69% of comparisons in round 1 (p = 0.008; 75% after the answers) and won interactive coding 12 : 5. Its pre-registered gate also required that no route get worse on the machine checks, and on interactive coding one hidden-test run more failed (12 / 18 vs. 13 / 18 for your prompt), so the shipped rules stay as they are.
 
-**Interactive coding got its own rules (Route L, October 20, 2026).** On set 3, interactive coding was the weak spot after the answers: one round-2 prompt turned an answer into a wait step, and all three runs stopped (hidden tests 12 / 18 vs. 13 / 18 for your prompt). The Route L rules in [`03`](knowledge/03-workflow-and-routing.md) remove such steps: the developer's request stays the core, nothing is narrowed, actions beyond the request become exclusions, and what would have been a stop becomes a question for you. On set 4 (22 new prompts, 9 of them interactive coding; the user answers every question), these rules after the answers beat your prompt on interactive coding 21 : 5 (1 tie, p = 0.002) and the previous rules 13 : 8 (6 ties), with 27 / 27 hidden-test runs passed (previous rules 24 / 27, yours 22 / 27). Over all 22 prompts they beat yours 80% (47 : 12, 7 ties). That run used the `hybrid` output format, which lost two unattended CI runs to a missed detail (hidden tests 7 / 9 vs. 9 / 9), so `main` takes only the Route L rules and keeps its output format. That combination was not measured separately.
+**Interactive coding got its own rules (Route L, October 20, 2026).** On set 3, interactive coding was the weak spot after the answers: one round-2 prompt turned an answer into a wait step, and all three runs stopped (hidden tests 12 / 18 vs. 13 / 18 for your prompt). The Route L rules in [`03`](knowledge/03-workflow-and-routing.md) remove such steps: the developer's request stays the core, nothing is narrowed, actions beyond the request become exclusions, and what would have been a stop becomes a question for you. On set 4 (22 new prompts, 9 of them interactive coding; the user answers every question), these rules after the answers beat your prompt on interactive coding 21 : 5 (1 tie, p = 0.002) and the previous rules 13 : 8 (6 ties), with 27 / 27 hidden-test runs passed (previous rules 24 / 27, yours 22 / 27). Over all 22 prompts they beat yours 80% (47 : 12, 7 ties). That run used an alternative terminal output format, which lost two unattended CI runs to a missed detail (hidden tests 7 / 9 vs. 9 / 9), so this repository takes only the Route L rules and keeps its output format. That combination was not measured separately.
 
 **What these numbers do not show.**
 - **Samples are small:** 62 held-out prompts × 3 runs; per-route results rest on 1–9 prompts per set.
