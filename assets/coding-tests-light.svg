@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="224" viewBox="0 0 800 224" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+<rect width="800" height="224" rx="8" fill="#ffffff"/>
+<text x="24" y="34" font-size="17" font-weight="600" fill="#1f2328">Interactive coding: hidden acceptance tests passed</text>
+<text x="24" y="56" font-size="13" fill="#59636e">Held-out set 4 · 9 coding tasks × 3 runs in Claude Code · after your answers</text>
+<line x1="230.0" y1="70" x2="230.0" y2="196" stroke="#d1d9e0"/>
+<text x="230.0" y="214" font-size="11" text-anchor="middle" fill="#59636e">0</text>
+<line x1="396.7" y1="70" x2="396.7" y2="196" stroke="#d1d9e0"/>
+<text x="396.7" y="214" font-size="11" text-anchor="middle" fill="#59636e">9</text>
+<line x1="563.3" y1="70" x2="563.3" y2="196" stroke="#d1d9e0"/>
+<text x="563.3" y="214" font-size="11" text-anchor="middle" fill="#59636e">18</text>
+<line x1="730.0" y1="70" x2="730.0" y2="196" stroke="#d1d9e0"/>
+<text x="730.0" y="214" font-size="11" text-anchor="middle" fill="#59636e">27</text>
+<text x="24" y="93" font-size="14" fill="#1f2328">Your prompt as written</text>
+<rect x="230" y="76" width="407.4" height="24" rx="3" fill="#9cc3ee"/>
+<text x="643.4" y="93" font-size="13" fill="#1f2328">22 / 27</text>
+<text x="24" y="133" font-size="14" fill="#1f2328">Optimizer before Route L</text>
+<rect x="230" y="116" width="444.4" height="24" rx="3" fill="#9cc3ee"/>
+<text x="680.4" y="133" font-size="13" fill="#1f2328">24 / 27</text>
+<text x="24" y="173" font-size="14" font-weight="600" fill="#1f2328">Optimizer with Route L rules</text>
+<rect x="230" y="156" width="500.0" height="24" rx="3" fill="#2a78d6"/>
+<text x="736.0" y="173" font-size="13" font-weight="600" fill="#0ca30c">27 / 27</text>
+</svg>
