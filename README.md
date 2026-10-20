@@ -21,6 +21,8 @@ Every edit cites the rule behind it, and every rule traces to Anthropic's offici
 
 </div>
 
+https://github.com/user-attachments/assets/7c340d77-fb64-4613-a8b8-ec740bc1dabf
+
 > [!NOTE]
 > **v1.0.0** builds your prompt right away but releases it once you have answered its questions. The answers
 > carry most of the gain: on held-out prompts the first version alone won 63% of blind comparisons, the prompt
